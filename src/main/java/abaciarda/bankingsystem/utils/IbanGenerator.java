@@ -8,7 +8,7 @@ public class IbanGenerator {
 
         String year = String.valueOf(LocalDate.now().getYear());
 
-        int randomNumber = (int) (Math.random() * 100) + 1;
+        int randomNumber = 100 + (int) (Math.random() * (10000 - 100 + 1));
 
         String bankCode = "1905";
 
