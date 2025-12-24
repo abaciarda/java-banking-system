@@ -23,7 +23,7 @@ public class AccountService {
     public List<Account> getAccounts(User user) throws SQLException {
         List<Account> accounts = new ArrayList<>();
 
-        String sql = "SELECT id, user_id, iban, balance, type, interest_rate, maturity_date FROM accounts WHERE userId = ?";
+        String sql = "SELECT id, user_id, iban, balance, type, interest_rate, maturity_date FROM accounts WHERE user_id = ?";
 
         try (PreparedStatement stmt = connection.prepareStatement(sql)) {
             stmt.setInt(1, user.getId());
