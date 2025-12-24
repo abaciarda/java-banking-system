@@ -31,7 +31,7 @@ public class AccountService {
 
             while (res.next()) {
                 int id = res.getInt("id");
-                int userId = res.getInt("userId");
+                int userId = res.getInt("user_id");
                 String iban = res.getString("iban");
                 double balance = res.getDouble("balance");
                 AccountType type = AccountType.valueOf(res.getString("type"));

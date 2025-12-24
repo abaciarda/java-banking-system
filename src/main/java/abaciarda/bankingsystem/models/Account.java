@@ -6,7 +6,7 @@ public abstract class Account {
     private final int id;
     private final int userId;
     private final String iban;
-    protected double balance;
+    private double balance;
     private final AccountType type;
 
     public Account(int id, int userId, String iban, double balance, AccountType type) {
@@ -30,6 +30,10 @@ public abstract class Account {
 
     protected void decreaseBalance(double amount) {
         this.balance -= amount;
+    }
+
+    protected void increaseBalance(double amount) {
+        this.balance += amount;
     }
 
     public int getId() {

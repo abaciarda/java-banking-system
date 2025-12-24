@@ -31,20 +31,25 @@ public class SavingsAccount extends Account {
             double penalty = amount * (EARLY_WITHDRAW_PENALTY_RATE / 100);
             finalAmount += penalty;
         } else {
-            interest = balance * (interestRate / 100);
+            interest = this.getBalance() * (interestRate / 100);
         }
 
-        double availableBalance = balance + interest;
+        double availableBalance = this.getBalance() + interest;
 
         if (finalAmount > availableBalance) {
-            return new AccountOperationResponse(false, "Çekmek istediğiniz miktar bakiyenizden daha büyük olamaz.");
+            if (isBeforeMaturity) {
+                return new AccountOperationResponse(false, "Yetersiz bakiye. Erken çekim nedeniyle %"+ EARLY_WITHDRAW_PENALTY_RATE + " ceza uygulanır. Gerekli toplam tutar: " + finalAmount);
+            } else {
+                return new AccountOperationResponse(false, "Yetersiz bakiye. Faiz dahil çekilebilir tutar: " + availableBalance);
+            }
         }
+
 
         if (!isBeforeMaturity) {
-            balance += interest;
+            increaseBalance(interest);
         }
 
-        balance -= finalAmount;
+        decreaseBalance(finalAmount);
 
         return new AccountOperationResponse(true, isBeforeMaturity ? "Para çekme işlemi vade dolmadan yapıldığı için " + EARLY_WITHDRAW_PENALTY_RATE + "% kesinti ile uygulandı." : "Para çekme işlemi gerçekleşti. Vade sonu gerçekleştiği için faiz miktarı hesabınıza yatırıldı.");
     }
