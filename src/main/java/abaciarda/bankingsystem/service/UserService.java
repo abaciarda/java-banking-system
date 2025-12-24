@@ -64,7 +64,7 @@ public class UserService {
         }
     }
 
-    public AuthResponse<User> loginAccount(String ssn, String password) throws SQLException {
+    public AuthResponse<User> authenticateUser(String ssn, String password) throws SQLException {
         if (ssn == null || ssn.isBlank()) {
             return new AuthResponse<>(false, "TC Kimlik No boş bırakılamaz", null);
         }
