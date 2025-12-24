@@ -1,11 +1,13 @@
 package abaciarda.bankingsystem.service;
 
-import abaciarda.bankingsystem.models.Account;
-import abaciarda.bankingsystem.models.TransactionType;
+import abaciarda.bankingsystem.models.*;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
 
 public class TransactionService {
     private final Connection connection;
@@ -25,6 +27,32 @@ public class TransactionService {
             stmt.setLong(5, System.currentTimeMillis());
 
             stmt.executeUpdate();
+        }
+    }
+
+    public List<Transaction> getTransactions(Account account) throws SQLException{
+        List<Transaction> transactions = new ArrayList<>();
+        String sql = "SELECT * FROM transactions WHERE account_id = ?";
+
+        try(PreparedStatement stmt = connection.prepareStatement(sql)) {
+            stmt.setInt(1, account.getId());
+
+            ResultSet res = stmt.executeQuery();
+
+            while(res.next()) {
+                int id = res.getInt("id");
+                int accountId = res.getInt("account_id");
+                TransactionType type = TransactionType.valueOf(res.getString("type"));
+                double amount = res.getDouble("amount");
+                double balanceAfter = res.getDouble("balance_after");
+                long createdAt = res.getLong("created_at");
+
+                Transaction transaction = new Transaction(id, accountId, type, amount, balanceAfter, createdAt);
+
+                transactions.add(transaction);
+            }
+
+            return transactions;
         }
     }
 }
