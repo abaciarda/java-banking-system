@@ -1,11 +1,14 @@
 package abaciarda.bankingsystem.service;
 
 import abaciarda.bankingsystem.models.*;
+import abaciarda.bankingsystem.types.AccountOperationResponse;
+import abaciarda.bankingsystem.utils.IbanGenerator;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -87,6 +90,63 @@ public class AccountService {
         }
 
         return null;
+    }
+
+    public Account getAccountByIban(String targetIban) throws SQLException {
+
+        String sql = "SELECT id, user_id, iban, balance, type, interest_rate, maturity_date FROM accounts WHERE iban = ?";
+
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            stmt.setString(1, targetIban);
+
+            ResultSet res = stmt.executeQuery();
+
+            if (res.next()) {
+                int id = res.getInt("id");
+                int userId = res.getInt("user_id");
+                String iban = res.getString("iban");
+                double balance = res.getDouble("balance");
+                AccountType type = AccountType.valueOf(res.getString("type"));
+
+                switch (type) {
+                    case CHECKING:
+                        return new CheckingAccount(id, userId, iban, balance, type);
+
+                    case SAVINGS:
+                        double interestRate = res.getDouble("interest_rate");
+                        long maturityDate = res.getLong("maturity_date");
+                        return new SavingsAccount(id, userId, iban, balance, type, interestRate, maturityDate);
+                }
+            }
+        }
+
+        return null;
+    }
+
+    public void createAccount(User user, AccountType type, int maturityDay) throws SQLException {
+        String sql = "INSERT INTO accounts (user_id, iban, balance, type, interest_rate, maturity_date) VALUES (?, ?, ?, ?, ?, ?)";
+
+        try(PreparedStatement stmt = connection.prepareStatement(sql)) {
+            stmt.setInt(1, user.getId());
+            stmt.setString(2, IbanGenerator.generateIban(user.getName()));
+            stmt.setInt(3, 0);
+
+            if (type == AccountType.CHECKING) {
+                stmt.setString(4, "CHECKING");
+                stmt.setInt(5, 0);
+                stmt.setInt(6, 0);
+            }
+
+            if (type == AccountType.SAVINGS) {
+                stmt.setString(4, "SAVINGS");
+                stmt.setInt(5, 33);
+
+                long maturityDate = Instant.now().plusSeconds(maturityDay * 24L * 60 * 60).toEpochMilli();
+                stmt.setLong(6, maturityDate);
+            }
+
+            stmt.executeUpdate();
+        }
     }
 
     public void updateBalance(Account account) throws SQLException {
