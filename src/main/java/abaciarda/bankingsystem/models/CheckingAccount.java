@@ -10,8 +10,8 @@ public class CheckingAccount extends Account implements Transferable{
 
     @Override
     public AccountOperationResponse withdraw(double amount) {
-        if (amount < 0) {
-            return new AccountOperationResponse(false, "Yatıracağınız para miktarı 0 veya negatif olamaz.");
+        if (amount <= 0) {
+            return new AccountOperationResponse(false, "Çekmek istediğiniz para miktarı 0 veya negatif olamaz.");
         }
 
         if (amount > this.getBalance()) {
