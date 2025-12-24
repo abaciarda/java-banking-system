@@ -109,10 +109,6 @@ public class BankService {
             return new AccountOperationResponse(false, "Geçersiz hesap tipi.");
         }
 
-        if (maturityDay < 1 || maturityDay > 181) {
-            return new AccountOperationResponse(false, "Bankamız için minimum ve maksimum vade günleri 1 veya 181 gün olabilir.");
-        }
-
         AccountType type = null;
 
         if (accountTypeId == 0) {
@@ -120,6 +116,9 @@ public class BankService {
         }
 
         if (accountTypeId == 1) {
+            if (maturityDay < 1 || maturityDay > 181) {
+                return new AccountOperationResponse(false, "Bankamız için minimum ve maksimum vade günleri 1 veya 181 gün olabilir.");
+            }
             type = AccountType.SAVINGS;
         }
 
