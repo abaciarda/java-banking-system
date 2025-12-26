@@ -4,11 +4,11 @@ import abaciarda.bankingsystem.types.AccountOperationResponse;
 
 import java.time.Instant;
 
+import static abaciarda.bankingsystem.models.Bank.GLOBAL_EARLY_WITHDRAW_PENALTY_RATE;
+
 public class SavingsAccount extends Account {
     private final double interestRate;
     private final long maturityDate;
-
-    private static final double EARLY_WITHDRAW_PENALTY_RATE = 5.0;
 
     public SavingsAccount(int id, int userId, String iban, double balance, AccountType type, double interestRate, long maturityDate) {
         super(id, userId, iban, balance, type);
@@ -28,7 +28,7 @@ public class SavingsAccount extends Account {
         double interest = 0.0;
 
         if (isBeforeMaturity) {
-            double penalty = amount * (EARLY_WITHDRAW_PENALTY_RATE / 100);
+            double penalty = amount * (GLOBAL_EARLY_WITHDRAW_PENALTY_RATE / 100);
             finalAmount += penalty;
         } else {
             interest = this.getBalance() * (interestRate / 100);
@@ -38,7 +38,7 @@ public class SavingsAccount extends Account {
 
         if (finalAmount > availableBalance) {
             if (isBeforeMaturity) {
-                return new AccountOperationResponse(false, "Yetersiz bakiye. Erken çekim nedeniyle %"+ EARLY_WITHDRAW_PENALTY_RATE + " ceza uygulanır. Gerekli toplam tutar: " + finalAmount);
+                return new AccountOperationResponse(false, "Yetersiz bakiye. Erken çekim nedeniyle %"+ GLOBAL_EARLY_WITHDRAW_PENALTY_RATE + " ceza uygulanır. Gerekli toplam tutar: " + finalAmount);
             } else {
                 return new AccountOperationResponse(false, "Yetersiz bakiye. Faiz dahil çekilebilir tutar: " + availableBalance);
             }
@@ -51,7 +51,7 @@ public class SavingsAccount extends Account {
 
         decreaseBalance(finalAmount);
 
-        return new AccountOperationResponse(true, isBeforeMaturity ? "Para çekme işlemi vade dolmadan yapıldığı için " + EARLY_WITHDRAW_PENALTY_RATE + "% kesinti ile uygulandı." : "Para çekme işlemi gerçekleşti. Vade sonu gerçekleştiği için faiz miktarı hesabınıza yatırıldı.");
+        return new AccountOperationResponse(true, isBeforeMaturity ? "Para çekme işlemi vade dolmadan yapıldığı için " + GLOBAL_EARLY_WITHDRAW_PENALTY_RATE + "% kesinti ile uygulandı." : "Para çekme işlemi gerçekleşti. Vade sonu gerçekleştiği için faiz miktarı hesabınıza yatırıldı.");
     }
 
 }
