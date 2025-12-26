@@ -10,6 +10,7 @@ import abaciarda.bankingsystem.service.UserService;
 import abaciarda.bankingsystem.types.AccountOperationResponse;
 import abaciarda.bankingsystem.types.AuthResponse;
 import abaciarda.bankingsystem.utils.CH;
+import abaciarda.bankingsystem.utils.CalculateInterest;
 
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -128,7 +129,8 @@ public class Main {
             System.out.println("4. Para Çek");
             System.out.println("5. Para Transferi (Havale)");
             System.out.println("6. İşlem Geçmişi");
-            System.out.println("7. Çıkış Yap (Oturumu Kapat)");
+            System.out.println("7. Faiz Hesaplama");
+            System.out.println("8. Çıkış Yap (Oturumu Kapat)");
             System.out.print("İşlem Seçiniz: ");
 
             int choice = readInt("İşlem Seçiniz");
@@ -155,6 +157,9 @@ public class Main {
                         showAccountHistory(user);
                         break;
                     case 7:
+                        handleCalculateInterest(user);
+                        break;
+                    case 8:
                         authenticated = false;
                         break;
                     default:
@@ -284,6 +289,18 @@ public class Main {
                     CH.formatDate(t.getCreatedAt())
             );
         }
+
+        CH.printDivider();
+        CH.multiSpace();
+    }
+
+    public static void handleCalculateInterest(User user) {
+        CH.printTitle("Faiz Hesaplama");
+
+        double amount = readDouble("Anapara miktarını giriniz");
+        int maturityDay = readInt("Vade süresini giriniz (1-730 Gün)");
+
+        CalculateInterest.calculateInterest(amount, maturityDay);
 
         CH.printDivider();
         CH.multiSpace();

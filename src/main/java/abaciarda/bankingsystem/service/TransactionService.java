@@ -6,6 +6,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -24,7 +25,7 @@ public class TransactionService {
             stmt.setString(2, type.name());
             stmt.setDouble(3, amount);
             stmt.setDouble(4, account.getBalance());
-            stmt.setLong(5, System.currentTimeMillis());
+            stmt.setLong(5, Instant.now().toEpochMilli());
 
             stmt.executeUpdate();
         }
