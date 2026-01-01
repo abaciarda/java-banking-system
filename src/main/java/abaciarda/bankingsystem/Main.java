@@ -2,6 +2,7 @@ package abaciarda.bankingsystem;
 
 import abaciarda.bankingsystem.config.DBConnection;
 import abaciarda.bankingsystem.models.Account;
+import abaciarda.bankingsystem.models.MonthlyReport;
 import abaciarda.bankingsystem.models.User;
 import abaciarda.bankingsystem.service.AccountService;
 import abaciarda.bankingsystem.service.BankService;
@@ -130,7 +131,8 @@ public class Main {
             System.out.println("5. Para Transferi (Havale)");
             System.out.println("6. İşlem Geçmişi");
             System.out.println("7. Faiz Hesaplama");
-            System.out.println("8. Çıkış Yap (Oturumu Kapat)");
+            System.out.println("8. Aylık Rapor");
+            System.out.println("9. Çıkış Yap (Oturumu Kapat)");
             System.out.print("İşlem Seçiniz: ");
 
             int choice = readInt("İşlem Seçiniz");
@@ -160,6 +162,9 @@ public class Main {
                         handleCalculateInterest(user);
                         break;
                     case 8:
+                        showMonthlyReport(user);
+                        break;
+                    case 9:
                         authenticated = false;
                         break;
                     default:
@@ -289,6 +294,38 @@ public class Main {
                     CH.formatDate(t.getCreatedAt())
             );
         }
+
+        CH.printDivider();
+        CH.multiSpace();
+    }
+
+    private static void showMonthlyReport(User user) throws SQLException {
+        CH.printTitle("Aylık Rapor");
+
+        MonthlyReport report = bankService.getMonthlyReport(user);
+
+        System.out.println("======================================");
+        System.out.println("        SON 30 GÜNLÜK HESAP RAPORU      ");
+        System.out.println("======================================");
+
+        System.out.printf("Toplam Para Yatırma   : %.2f TL%n", report.getTotalDeposit());
+        System.out.printf("Toplam Para Çekme     : %.2f TL%n", report.getTotalWithdraw());
+        System.out.printf("Toplam Gelen Transfer : %.2f TL%n", report.getTotalTransferIn());
+        System.out.printf("Toplam Giden Transfer : %.2f TL%n", report.getTotalTransferOut());
+
+        CH.printDivider();
+
+        System.out.printf("Net Değişim           : %.2f TL%n", report.getNetChange());
+
+        if (report.getNetChange() > 0) {
+            System.out.println("Durum                 : KÂR");
+        } else if (report.getNetChange() < 0) {
+            System.out.println("Durum                 : ZARAR");
+        } else {
+            System.out.println("Durum                 : DEĞİŞİM YOK");
+        }
+
+        System.out.println("======================================");
 
         CH.printDivider();
         CH.multiSpace();

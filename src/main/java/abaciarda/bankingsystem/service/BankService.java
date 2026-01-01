@@ -4,7 +4,9 @@ import abaciarda.bankingsystem.models.*;
 import abaciarda.bankingsystem.types.AccountOperationResponse;
 import abaciarda.bankingsystem.types.AuthResponse;
 
+import java.sql.Connection;
 import java.sql.SQLException;
+import java.time.Instant;
 import java.util.List;
 
 public class BankService {
@@ -102,6 +104,51 @@ public class BankService {
         }
 
        return transactionService.getTransactions(targetAccount);
+    }
+
+    public MonthlyReport getMonthlyReport(User user) throws SQLException {
+        List<Account> userAccounts = accountService.getAccounts(user);
+
+        double totalDeposit = 0;
+        double totalWithdraw = 0;
+        double totalTransferIn = 0;
+        double totalTransferOut = 0;
+
+        long thirtyDayUnixTMSTMP = 30L * 24 * 60 * 60 * 1000;
+        long startDate = Instant.now().toEpochMilli() - thirtyDayUnixTMSTMP;
+
+
+        for (Account account : userAccounts) {
+            List<Transaction> transactions = transactionService.getTransactions(account);
+
+            for(Transaction transaction : transactions) {
+                if (transaction.getCreatedAt() < startDate) {
+                    continue;
+                }
+
+                switch (transaction.getType()) {
+                    case DEPOSIT:
+                        totalDeposit += transaction.getAmount();
+                        break;
+
+                    case WITHDRAW:
+                        totalWithdraw += transaction.getAmount();
+                        break;
+
+                    case TRANSFER_IN:
+                        totalTransferIn += transaction.getAmount();
+                        break;
+
+                    case TRANSFER_OUT:
+                        totalTransferOut += transaction.getAmount();
+                        break;
+                }
+            }
+        }
+
+        double netVal = (totalDeposit + totalTransferIn) - (totalWithdraw + totalTransferOut);
+
+        return new MonthlyReport(totalDeposit, totalWithdraw, totalTransferIn, totalTransferOut, netVal);
     }
 
     public AccountOperationResponse createAccount(User user, Integer accountTypeId, int maturityDay) throws SQLException {
