@@ -33,3 +33,14 @@ CREATE TABLE transactions (
 
     FOREIGN KEY (account_id) REFERENCES accounts(id) ON DELETE CASCADE
 );
+
+CREATE TABLE loans (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    principal_amount DOUBLE,
+    interest_rate DOUBLE,
+    total_debt DOUBLE,
+    remaining_debt DOUBLE,
+    created_at BIGINT,
+    status VARCHAR(20)
+);

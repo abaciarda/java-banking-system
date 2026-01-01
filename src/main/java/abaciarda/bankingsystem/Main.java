@@ -2,12 +2,10 @@ package abaciarda.bankingsystem;
 
 import abaciarda.bankingsystem.config.DBConnection;
 import abaciarda.bankingsystem.models.Account;
+import abaciarda.bankingsystem.models.Loan;
 import abaciarda.bankingsystem.models.MonthlyReport;
 import abaciarda.bankingsystem.models.User;
-import abaciarda.bankingsystem.service.AccountService;
-import abaciarda.bankingsystem.service.BankService;
-import abaciarda.bankingsystem.service.TransactionService;
-import abaciarda.bankingsystem.service.UserService;
+import abaciarda.bankingsystem.service.*;
 import abaciarda.bankingsystem.types.AccountOperationResponse;
 import abaciarda.bankingsystem.types.AuthResponse;
 import abaciarda.bankingsystem.utils.CH;
@@ -33,7 +31,8 @@ public class Main {
         UserService userService = new UserService(connection);
         AccountService accountService = new AccountService(connection);
         TransactionService transactionService = new TransactionService(connection);
-        bankService = new BankService(accountService, transactionService, userService);
+        LoanService loanService = new LoanService(connection);
+        bankService = new BankService(accountService, transactionService, userService, loanService);
 
         boolean running = true;
 
@@ -132,7 +131,10 @@ public class Main {
             System.out.println("6. İşlem Geçmişi");
             System.out.println("7. Faiz Hesaplama");
             System.out.println("8. Aylık Rapor");
-            System.out.println("9. Çıkış Yap (Oturumu Kapat)");
+            System.out.println("9. Kredi Çek");
+            System.out.println("10. Kredilerim");
+            System.out.println("11. Kredi Öde");
+            System.out.println("12. Çıkış Yap (Oturumu Kapat)");
             System.out.print("İşlem Seçiniz: ");
 
             int choice = readInt("İşlem Seçiniz");
@@ -165,6 +167,15 @@ public class Main {
                         showMonthlyReport(user);
                         break;
                     case 9:
+                        handleRequestLoan(user);
+                        break;
+                    case 10:
+                        showUserLoans(user);
+                        break;
+                    case 11:
+                        handlePayLoan(user);
+                        break;
+                    case 12:
                         authenticated = false;
                         break;
                     default:
@@ -255,6 +266,106 @@ public class Main {
         CH.printDivider();
         CH.multiSpace();
     }
+
+    private static void handleRequestLoan(User user) throws SQLException {
+        CH.printTitle("Kredi Çek");
+
+        listUserAccounts(user);
+
+        int accountId = readInt("Kredinin yatırılacağı hesap ID:");
+        double amount = readDouble("Çekmek istediğiniz kredi tutarı:");
+
+        AccountOperationResponse response = bankService.requestLoan(user, accountId, amount);
+
+        if (response.isSuccess()) {
+            CH.success(response.getMessage());
+        } else {
+            CH.error(response.getMessage());
+        }
+
+        CH.printDivider();
+        CH.multiSpace();
+    }
+
+    private static void showUserLoans(User user) throws SQLException {
+        CH.printTitle("Kredilerim");
+
+        List<Loan> loans = bankService.getActiveLoans(user);
+
+        if (loans.isEmpty()) {
+            CH.info("Aktif krediniz bulunmamaktadır.");
+            CH.multiSpace();
+            return;
+        }
+
+        System.out.printf(
+                "%-5s %-15s %-15s %-15s %-10s%n",
+                "ID", "ANAPARA", "TOPLAM BORÇ", "KALAN", "DURUM"
+        );
+        CH.printDivider();
+
+        for (Loan loan : loans) {
+            System.out.printf(
+                    "%-5d %-15.2f %-15.2f %-15.2f %-10s%n",
+                    loan.getId(),
+                    loan.getPrincipalAmount(),
+                    loan.getTotalDebt(),
+                    loan.getRemainingDebt(),
+                    loan.getStatus()
+            );
+        }
+
+        CH.printDivider();
+        CH.multiSpace();
+    }
+
+    private static void handlePayLoan(User user) throws SQLException {
+        CH.printTitle("Kredi Ödeme");
+
+        List<Loan> loans = bankService.getActiveLoans(user);
+
+        if (loans.isEmpty()) {
+            CH.info("Ödenecek aktif kredi bulunmamaktadır.");
+            CH.multiSpace();
+            return;
+        }
+
+        showUserLoans(user);
+
+        int loanId = readInt("Ödeme yapmak istediğiniz kredi ID:");
+        double amount = readDouble("Ödeme tutarı:");
+
+        listUserAccounts(user);
+        int accountId = readInt("Ödeme yapılacak hesap ID:");
+
+        Loan selectedLoan = null;
+
+        for (Loan loan : loans) {
+            if (loan.getId() == loanId) {
+                selectedLoan = loan;
+                break;
+            }
+        }
+
+        if (selectedLoan == null) {
+            CH.error("Geçersiz kredi ID.");
+            return;
+        }
+
+        AccountOperationResponse response =
+                bankService.payLoan(user, accountId, selectedLoan, amount);
+
+        if (response.isSuccess()) {
+            CH.success(response.getMessage());
+        } else {
+            CH.error(response.getMessage());
+        }
+
+        CH.printDivider();
+        CH.multiSpace();
+    }
+
+
 
     private static void showAccountHistory(User user) throws SQLException {
         CH.printTitle("Hesap İşlem Geçmişi");

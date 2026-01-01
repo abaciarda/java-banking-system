@@ -13,11 +13,13 @@ public class BankService {
     private final AccountService accountService;
     private final TransactionService transactionService;
     private final UserService userService;
+    private final LoanService loanService;
 
-    public BankService(AccountService accountService, TransactionService transactionService, UserService userService) {
+    public BankService(AccountService accountService, TransactionService transactionService, UserService userService, LoanService loanService) {
         this.accountService = accountService;
         this.transactionService = transactionService;
         this.userService = userService;
+        this.loanService = loanService;
     }
 
     public AccountOperationResponse deposit(User user, int accountId, double amount) throws SQLException {
@@ -61,6 +63,10 @@ public class BankService {
     }
 
     public AccountOperationResponse transfer(User user, Account account, String iban, double amount) throws SQLException {
+        if (account == null) {
+            return new AccountOperationResponse(false, "Gönderici hesap boş olamaz. Lütfen seçtiğiniz hesaba tekrar göz atın.");
+        }
+
         Account sender = accountService.getAccountById(user, account.getId());
         Account receiver = accountService.getAccountByIban(iban);
 
@@ -150,6 +156,64 @@ public class BankService {
 
         return new MonthlyReport(totalDeposit, totalWithdraw, totalTransferIn, totalTransferOut, netVal);
     }
+
+    public AccountOperationResponse requestLoan(User user, int accountId, double amount) throws SQLException {
+        Account account = accountService.getAccountById(user, accountId);
+
+        if (account == null || account.getType() != AccountType.CHECKING) {
+            return new AccountOperationResponse(false, "Kredi yalnızca vadesiz hesaba tanımlanabilir.");
+        }
+
+        double interestRate = Bank.GLOBAL_INTEREST_RATE;
+
+        Loan loan = loanService.createLoan(user, amount, interestRate);
+
+        account.deposit(amount);
+        accountService.updateBalance(account);
+
+        transactionService.createTransaction(account, TransactionType.LOAN_IN, amount);
+
+        return new AccountOperationResponse(true, "Kredi başarıyla tanımlandı. Toplam borcunuz: " + loan.getTotalDebt());
+    }
+
+    public AccountOperationResponse payLoan(User user, int accountId, Loan loan, double amount) throws SQLException{
+        Account account = accountService.getAccountById(user, accountId);
+
+        if (account == null) {
+            return new AccountOperationResponse(false, "Hesap bulunamadı.");
+        }
+
+        if (account.getType() != AccountType.CHECKING) {
+            return new AccountOperationResponse(false, "Kredi ödemeleri yalnızca vadesiz hesapla yapılabilir.");
+        }
+
+        if (amount <= 0) {
+            return new AccountOperationResponse(false, "Kredi ödemesi gerçekleştirmek için minimum ödemeni gereken miktar 1 TL'dir.");
+        }
+
+        if (loan.getRemainingDebt() < amount) {
+            return new AccountOperationResponse( false, "Ödeme tutarı kalan borçtan fazla olamaz. Kalan borç: " + loan.getRemainingDebt() + " TL" );
+        }
+
+        AccountOperationResponse withdraw = account.withdraw(amount);
+        if (!withdraw.isSuccess()) {
+            return withdraw;
+        }
+
+        loan.pay(amount);
+
+        accountService.updateBalance(account);
+        loanService.updateLoan(loan);
+
+        transactionService.createTransaction(account, TransactionType.LOAN_PAYMENT, amount);
+
+        return new AccountOperationResponse(true, "Kredi ödemesi başarıyla alındı.");
+    }
+
+    public List<Loan> getActiveLoans(User user) throws SQLException {
+        return loanService.getActiveLoans(user);
+    }
+
 
     public AccountOperationResponse createAccount(User user, Integer accountTypeId, int maturityDay) throws SQLException {
         if (accountTypeId < 0 || accountTypeId > 1) {
