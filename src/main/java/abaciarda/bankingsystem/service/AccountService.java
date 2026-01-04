@@ -141,7 +141,9 @@ public class AccountService {
 
             if (type == AccountType.SAVINGS) {
                 stmt.setString(4, "SAVINGS");
-                stmt.setDouble(5, GLOBAL_INTEREST_RATE);
+                
+                double effectiveRate = (GLOBAL_INTEREST_RATE / 365.0) * maturityDay;
+                stmt.setDouble(5, effectiveRate);
 
                 long maturityDate = Instant.now().plusSeconds(maturityDay * 24L * 60 * 60).toEpochMilli();
                 stmt.setLong(6, maturityDate);

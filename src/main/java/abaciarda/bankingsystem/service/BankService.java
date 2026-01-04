@@ -82,10 +82,6 @@ public class BankService {
             return new AccountOperationResponse(false, "Bu hesap transfer yapamaz.");
         }
 
-        if (!(receiver instanceof Transferable transferable1)) {
-            return new AccountOperationResponse(false, "Alıcı hesap transfer için uygun değil.");
-        }
-
         AccountOperationResponse response = transferable.transfer(receiver, amount);
 
         if (!response.isSuccess()) {

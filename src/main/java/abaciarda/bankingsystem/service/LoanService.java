@@ -1,5 +1,6 @@
 package abaciarda.bankingsystem.service;
 
+import abaciarda.bankingsystem.models.Bank;
 import abaciarda.bankingsystem.models.Loan;
 import abaciarda.bankingsystem.models.LoanStatus;
 import abaciarda.bankingsystem.models.User;
@@ -20,7 +21,8 @@ public class LoanService {
     }
 
     public Loan createLoan(User user, double amount, double interestRate) throws SQLException {
-        double totalDebt = amount + (amount * interestRate);
+        double effectiveRate = (interestRate / 365.0) * 30;
+        double totalDebt = amount + (amount * effectiveRate);
         long now = Instant.now().toEpochMilli();
 
         String sql = "INSERT INTO loans (user_id, principal_amount, interest_rate, total_debt, remaining_debt, created_at, status) VALUES (?, ?, ?, ?, ?, ?, ?)";
@@ -28,7 +30,7 @@ public class LoanService {
         try(PreparedStatement stmt = connection.prepareStatement(sql)) {
             stmt.setInt(1, user.getId());
             stmt.setDouble(2, amount);
-            stmt.setDouble(3, interestRate);
+            stmt.setDouble(3, effectiveRate);
             stmt.setDouble(4, totalDebt);
             stmt.setDouble(5, totalDebt);
             stmt.setLong(6, now);
