@@ -24,7 +24,7 @@ public class Loan {
     public void pay(double amount) {
         this.remainingDebt -= amount;
 
-        if (remainingDebt <= 0) {
+        if (remainingDebt <= 0.01) {
             remainingDebt = 0;
             status = LoanStatus.PAID;
         }
