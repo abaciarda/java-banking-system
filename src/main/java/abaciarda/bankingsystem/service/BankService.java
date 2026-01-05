@@ -169,7 +169,7 @@ public class BankService {
 
         transactionService.createTransaction(account, TransactionType.LOAN_IN, amount);
 
-        return new AccountOperationResponse(true, "Kredi başarıyla tanımlandı. Toplam borcunuz: " + loan.getTotalDebt());
+        return new AccountOperationResponse(true, String.format("Kredi başarıyla tanımlandı. Toplam borcunuz: %.2f", loan.getTotalDebt()));
     }
 
     public AccountOperationResponse payLoan(User user, int accountId, Loan loan, double amount) throws SQLException{
@@ -187,8 +187,8 @@ public class BankService {
             return new AccountOperationResponse(false, "Kredi ödemesi gerçekleştirmek için minimum ödemeni gereken miktar 1 TL'dir.");
         }
 
-        if (loan.getRemainingDebt() < amount) {
-            return new AccountOperationResponse( false, "Ödeme tutarı kalan borçtan fazla olamaz. Kalan borç: " + loan.getRemainingDebt() + " TL" );
+        if (amount - loan.getRemainingDebt() > 0.01) {
+            return new AccountOperationResponse(false, String.format("Ödeme tutarı kalan borçtan fazla olamaz. Kalan borç: %.2f TL", loan.getRemainingDebt()));
         }
 
         AccountOperationResponse withdraw = account.withdraw(amount);

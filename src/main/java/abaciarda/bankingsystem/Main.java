@@ -22,9 +22,7 @@ public class Main {
 
     public static Scanner sc = new Scanner(System.in);
 
-    public static String RED = "\u001B[31m";
-    public static String GREEN = "\u001B[32m";
-    public static String RESET = "\u001B[0m";
+
 
     public static void main(String[] args) {
         connection = DBConnection.getConnection();
@@ -36,18 +34,19 @@ public class Main {
 
         boolean running = true;
 
-        System.out.println(RED + """
+        System.out.println("\n");
+        System.out.println("""
                ██╗ █████╗ ██╗   ██╗ █████╗     ██████╗  █████╗ ███╗   ██╗██╗  ██╗
                ██║██╔══██╗██║   ██║██╔══██╗    ██╔══██╗██╔══██╗████╗  ██║██║ ██╔╝
                ██║███████║██║   ██║███████║    ██████╔╝███████║██╔██╗ ██║█████╔╝ 
           ██   ██║██╔══██║╚██╗ ██╔╝██╔══██║    ██╔══██╗██╔══██║██║╚██╗██║██╔═██╗ 
           ╚█████╔╝██║  ██║ ╚████╔╝ ██║  ██║    ██████╔╝██║  ██║██║ ╚████║██║  ██╗
            ╚════╝ ╚═╝  ╚═╝  ╚═══╝  ╚═╝  ╚═╝    ╚═════╝ ╚═╝  ╚═╝╚═╝  ╚═══╝╚═╝  ╚═╝
-        """ + RESET);
+        """);
 
         while(running) {
             CH.printTitle("Ana Menü");
-            System.out.println(RED + "Merhaba! Java Bank'a hoş geldiniz!" + RESET);
+            System.out.println("Merhaba! Java Bank'a hoş geldiniz!");
             System.out.println("Aşağıdaki menüden yapmak istediğiniz işlemi seçiniz:");
             System.out.println("1. Giriş Yap");
             System.out.println("2. Kayıt Ol");
